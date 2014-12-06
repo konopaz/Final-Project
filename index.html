@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>My Movies Database</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <h1>My Movies Database</h1>
+        <table id="movies" class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th style="width: 75px;"></th>
+              <th style="width: 100px;"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="addMovieButton">Add Movie</button>
+      </div>
+      <div class="row">&nbsp;</div>
+    </div>
+    <div id="addMovieModal" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Add Movie</h4>
+          </div>
+          <div class="modal-body">
+            <form method="post" action="api.php/movies" id="addMovieForm">
+              <div class="form-group">
+                <label for="inputTitle">Title</label>
+                <input type="name" name="title" class="form-control" id="inputTitle" placeholder="Title"/>
+              </div>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="editMovieModal" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Edit Movie</h4>
+          </div>
+          <div class="modal-body">
+            <form method="post" action="api.php/movies" id="editMovieForm">
+              <input type="hidden" name="id" id="editId"/>
+              <div class="form-group">
+                <label for="editTitle">Title</label>
+                <input type="name" name="title" class="form-control" id="editTitle"/>
+              </div>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+    //<![CDATA[
+
+        var $moviesTable, $addMovieForm, $editMovieForm;
+
+        $(document).ready(function() {
+
+          $moviesTable = $('#movies');
+          $addMovieForm = $('#addMovieForm');
+          $editMovieForm = $('#editMovieForm');
+
+          loadMovies();
+
+          $addMovieForm.submit(function(e) {
+
+            var $this = $(this);
+
+            e.preventDefault();
+
+            $.post($this.attr('action'), $this.serialize(), function(resp) {
+
+              addMovieRow(resp);
+              $('#addMovieModal').modal('hide');
+            });
+          });
+
+          $editMovieForm.submit(function(e) {
+
+            var $this = $(this);
+
+            e.preventDefault();
+
+            $.post($this.attr('action'), $this.serialize(), function(resp) {
+
+              $('#editMovieModal').modal('hide');
+              $('#movie-' + resp.id).remove();
+              addMovieRow(resp);
+            });
+          });
+
+          $('#addMovieButton').click(function(e) {
+
+            $addMovieForm.trigger('reset');
+            $('#addMovieModal').modal('show');
+          });
+        });
+
+        function compareMovies(movie1, movie2) {
+
+          return movie1.title.localeCompare(movie2.title);
+        }
+
+        function editMovie(movieId) {
+
+          //console.log('edit movie: ' + movieId);
+          var $tr = $('#movie-' + movieId);
+          var movieData = $tr.data('movie');
+
+          $('#editId').val(movieData.id);
+          $('#editTitle').val(movieData.title);
+
+          $('#editMovieModal').modal('show');
+        }
+
+        function deleteMovie(movieId) {
+
+          var $tr = $('#movie-' + movieId);
+          var movieData = $tr.data('movie');
+
+          if(confirm('Are you sure you want to delete "' + movieData.title + '"?')) {
+
+            $tr.remove();
+
+            $.ajax({
+              url: 'api.php/movies/' + movieData.id,
+              type: 'DELETE'
+            });
+          }
+        }
+
+        function loadMovies() {
+
+          $moviesTable.slideUp();
+
+          $.get('api.php/movies', function(resp, stat) {
+
+            $moviesTable.find('tbody').html();
+
+            for(var i = 0; i < resp.length; i++) {
+              
+              addMovieRow(resp[i]);
+            }
+
+            $moviesTable.slideDown();
+          }).fail(function() {
+          
+            window.location = 'login.php';
+          });
+        }
+
+        function addMovieRow(movieData) {
+
+            var $tr = $('<tr id=\"movie-' + movieData.id + '"/>');
+            $tr.data('movie', movieData);
+            $tr.append('<td>' + movieData.title + '</td>');
+            $tr.append('<td><button type="button" class="btn btn-xs btn-primary" onclick="editMovie(' + movieData.id + ')">Edit</button></td>');
+            $tr.append('<td><button type="button" class="btn btn-xs btn-primary" onclick="deleteMovie(' + movieData.id + ')">Delete</button></td>');
+
+            $moviesTable.find('tbody').append($tr);
+        }
+
+    //]]>
+    </script>
+  </body>
+</html>

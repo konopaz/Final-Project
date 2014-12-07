@@ -42,6 +42,7 @@ class MoviesDAO implements DAO {
 
       while($row = $select->fetch()) {
 
+
         $movie = new Movie();
         $movie->assignFrom($row);
         $data[] = $movie;
@@ -137,9 +138,11 @@ class MoviesDAO implements DAO {
   private function insert(Movie $movie) {
 
     $title = $movie->title;
+    $released = $movie->released;
 
     $insert = $this->prepareInsert();
     $insert->bindParam(':title', $title);
+    $insert->bindParam(':released', $released);
     $insert->execute();
 
     $movie->id = $this->_dbConn->lastInsertId();
@@ -152,11 +155,13 @@ class MoviesDAO implements DAO {
       $sql = 
         'INSERT INTO '.$this->_table.' ('.
           'title, '.
+          'released, '.
           'user_id, '.
           'created, '.
           'modified '.
         ') VALUES ('.
           ':title, '.
+          ':released, '.
           ':user_id, '.
           'NOW(), '.
           'NOW() '.
@@ -172,10 +177,12 @@ class MoviesDAO implements DAO {
   private function update(Movie $movie) {
 
     $title = $movie->title;
+    $released = $movie->released;
     $id = $movie->id;
 
     $update = $this->prepareUpdate();
     $update->bindParam(':title', $title);
+    $update->bindParam(':released', $released);
     $update->bindParam(':id', $id);
     $update->execute();
   }
@@ -187,6 +194,7 @@ class MoviesDAO implements DAO {
       $sql = 
         'UPDATE '.$this->_table.' SET '.
           'title = :title, '.
+          'released = :released, '.
           'modified = NOW() '.
         'WHERE '.
           'id = :id '.

@@ -5,8 +5,7 @@
     <title>My Movies Database</title>
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.min.css">
-    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
-    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.11.2/themes/blitzer/jquery-ui.css">
   </head>
   <body>
     <div class="container">
@@ -39,7 +38,11 @@
             <form method="post" action="api.php/movies" id="addMovieForm">
               <div class="form-group">
                 <label for="inputTitle">Title</label>
-                <input type="name" name="title" class="form-control" id="inputTitle" placeholder="Title"/>
+                <input type="text" name="title" class="form-control" id="inputTitle" placeholder="Title"/>
+              </div>
+              <div class="form-group">
+                <label for="inputReleased">Release Date</label>
+                <input type="date" name="released" class="form-control" id="inputReleased" placeholder="Release Date"/>
               </div>
               <button type="submit" class="btn btn-primary">Save</button>
             </form>
@@ -59,7 +62,11 @@
               <input type="hidden" name="id" id="editId"/>
               <div class="form-group">
                 <label for="editTitle">Title</label>
-                <input type="name" name="title" class="form-control" id="editTitle"/>
+                <input type="text" name="title" class="form-control" id="editTitle"/>
+              </div>
+              <div class="form-group">
+                <label for="editReleased">Release Date</label>
+                <input type="date" name="released" class="form-control" id="editReleased"/>
               </div>
               <button type="submit" class="btn btn-primary">Save</button>
             </form>
@@ -67,12 +74,17 @@
         </div>
       </div>
     </div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript">
     //<![CDATA[
 
         var $moviesTable, $addMovieForm, $editMovieForm;
 
         $(document).ready(function() {
+
+          $('input[type="date"]').datepicker();
 
           $moviesTable = $('#movies');
           $addMovieForm = $('#addMovieForm');
@@ -121,12 +133,14 @@
 
         function editMovie(movieId) {
 
-          //console.log('edit movie: ' + movieId);
           var $tr = $('#movie-' + movieId);
           var movieData = $tr.data('movie');
 
+          console.log(movieData);
+
           $('#editId').val(movieData.id);
           $('#editTitle').val(movieData.title);
+          $('#editReleased').val(movieData.released);
 
           $('#editMovieModal').modal('show');
         }

@@ -5,7 +5,13 @@ class Bean {
 
     foreach($data as $k => $v) {
 
-      if(property_exists($this, $k)) {
+        $method = 'set'.ucfirst($k);
+
+      if(method_exists($this, $k)) {
+
+        $this->$k($v);
+      }
+      else if(property_exists($this, $k)) {
 
         $this->$k = $v;
       }

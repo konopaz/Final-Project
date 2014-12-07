@@ -10,7 +10,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if(strlen($_POST['username']) == 0 || strlen($_POST['password']) == 0) {
 
-      $loginFeedback = "Please enter your ursername and password.<br />\n";
+      $loginFeedback = "Please enter your ursername and password.\n";
     }
 
     if(strlen($loginFeedback) == 0) {
@@ -25,32 +25,57 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         if($row['password'] == $_POST['password']) {
 
           $_SESSION['userId'] = $row['id'];
-          header('Location: index.html');
+
+          if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+
+            $obj = new stdClass;
+            $obj->status = 'redirect';
+            $obj->url = 'index.html';
+
+            header('Content-Type: application/json');
+            echo json_encode($obj);
+          }
+          else {
+
+            header('Location: index.html');
+          }
+
           exit;
         }
         else {
 
-          $loginFeedback = "Sorry, password didn't match.<br />\n";
+          $loginFeedback = "Sorry, password didn't match.\n";
         }
       }
       else {
 
-        $loginFeedback = "Sorry, couldn't find a user with that username.<br />\n";
+        $loginFeedback = "Sorry, couldn't find a user with that username.\n";
       }
+    }
+
+    if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+
+      $obj = new stdClass;
+      $obj->status = 'error';
+      $obj->feedback = $loginFeedback;
+
+      header('Content-Type: application/json');
+      echo json_encode($obj);
+      exit;
     }
   }
 
   if($_POST['action'] == 'signup') {
 
     if(strlen($_POST['newUsername']) == 0) {
-      $signupFeedback .= "Please enter your new username.<br />\n";
+      $signupFeedback .= "Please enter your new username.\n";
     }
 
     if(strlen($_POST['newPassword']) == 0 || strlen($_POST['confirmPassword']) == 0) {
-      $signupFeedback .= "Please enter your new password.<br />\n";
+      $signupFeedback .= "Please enter your new password.\n";
     }
     elseif($_POST['newPassword'] != $_POST['confirmPassword']) {
-      $signupFeedback .= "Please confirm your new password.<br />\n";
+      $signupFeedback .= "Please confirm your new password.\n";
     }
 
     if(strlen($signupFeedback) == 0) {
@@ -63,15 +88,41 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
       if($stmt->execute()) {
 
         $_SESSION['userId'] = $pdo->lastInsertId();
-        header('Location: index.html');
+
+        if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+
+          $obj = new stdClass;
+          $obj->status = 'redirect';
+          $obj->url = 'index.html';
+
+          header('Content-Type: application/json');
+          echo json_encode($obj);
+        }
+        else {
+
+          header('Location: index.html');
+        }
+
         exit;
       }
       else {
 
-        $signupFeedback = "Please enter a different username.<br />\n";
+        $signupFeedback = "Please enter a different username.\n";
       }
     }
+
+    if($_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+
+      $obj = new stdClass;
+      $obj->status = 'error';
+      $obj->feedback = $signupFeedback;
+
+      header('Content-Type: application/json');
+      echo json_encode($obj);
+      exit;
+    }
   }
+
 }
 
 ?>
@@ -82,8 +133,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>My Movies Database</title>
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.min.css">
-    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
-    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -92,7 +141,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
           <h2>Login</h2>
           <form method="post" action="<?=$_SERVER['PHP_SELF']?>">
             <?php if(strlen($loginFeedback)): ?>
-              <p><?=$loginFeedback?></p>
+              <p><?=nl2br($loginFeedback)?></p>
             <?php endif; ?>
             <input type="hidden" name="action" value="login"/>
             <div class="form-group">
@@ -109,7 +158,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
           <h2>Signup</h2>
           <form method="post" action="<?=$_SERVER['PHP_SELF']?>">
             <?php if(strlen($signupFeedback)): ?>
-              <p><?=$signupFeedback?></p>
+              <p><?=nl2br($signupFeedback)?></p>
             <?php endif; ?>
             <input type="hidden" name="action" value="signup"/>
 
@@ -127,5 +176,34 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
       </div>
     </div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+    //<![CDATA[
+      $(document).ready(function() {
+
+        $('form').submit(function(e) {
+
+          var $this = $(this);
+
+          e.preventDefault();
+
+          $.post($this.attr('action'), $this.serialize(), function(resp, stat) {
+
+            if(resp.status == 'error') {
+
+              alert(resp.feedback);
+            }
+            else if(resp.status == 'redirect') {
+
+              window.location = resp.url;
+            }
+          });
+
+          return false;
+        });
+      });
+    //]]>
+    </script>
   </body>
 </html>
